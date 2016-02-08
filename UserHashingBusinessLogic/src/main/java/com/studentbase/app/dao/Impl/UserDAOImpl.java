@@ -13,7 +13,7 @@ import com.studentbase.app.entity.User;
 
 public class UserDAOImpl implements UserDAO{
 
-    //logger
+	//logger
     final static Logger LOG = Logger.getLogger(UserDAOImpl.class);
 
 	private static Session session = HibernateUtil.getSessionFactory().openSession();
@@ -28,8 +28,24 @@ public class UserDAOImpl implements UserDAO{
     public User findByLogin(String login) {
         LOG.info("Get by login: " + login);
         return (User) session.createQuery("from User user where user.login = ?")
-                .setParameter(0, login);
+                .setParameter(0, login)
+                .uniqueResult();
     }
+
+    @Override
+	public boolean authentificate(String username, String password) {
+        if(session.createQuery("from User user where user.login = ? and user.password = ?")
+                .setParameter(0, username)
+                .setParameter(1, password)
+                .uniqueResult() != null) {
+        	LOG.info("Credentials is true");
+        	return true;
+        }
+
+    	LOG.info("Credentials is false");
+    	return false;
+	}
+
 
     @Override
     public void saveUser(User user) {

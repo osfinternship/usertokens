@@ -10,6 +10,8 @@ public interface UserService {
 
     User findByLogin(String login);
 
+    boolean authentificate(String username, String password);
+
     void saveUser(User user);
 
     void updateUser(User user);

@@ -48,13 +48,18 @@
 	        },
 	        dataType: 'json',
 	        success: function (data) {
-	            console.log(data);
+	            console.log('s');
+	        	console.log(data);
+	        },
+	        error: function(error) {
+	        	console.log('e');
+	        	console.log(error);
 	        }
 	    });
 	    
 	    //redirect
-	    window.location.href = "http://localhost:8080/pages/page1.html";
-
+/*  	    window.location.href = "http://localhost:8080/pages/page1.html";
+ */
 	});	
 	</script>
 </body>

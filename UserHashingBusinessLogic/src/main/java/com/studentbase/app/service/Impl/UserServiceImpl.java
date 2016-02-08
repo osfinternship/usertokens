@@ -25,6 +25,11 @@ public class UserServiceImpl implements UserService {
         return userDAO.findByLogin(login);
     }
 
+	@Override
+	public boolean authentificate(String username, String password) {
+		return userDAO.authentificate(username, password);
+	}
+
     @Override
     public void saveUser(User user) {
         userDAO.saveUser(user);

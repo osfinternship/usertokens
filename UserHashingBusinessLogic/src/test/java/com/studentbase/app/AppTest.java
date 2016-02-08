@@ -1,6 +1,7 @@
 package com.studentbase.app;
 
 import org.apache.log4j.Logger;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.junit.After;
 import org.junit.Before;
@@ -30,5 +31,14 @@ public class AppTest {
 	}
 	
 	@Test
-	public void test1() {}
+	public void test1() {
+		UserService userService = new UserServiceImpl();
+		try {
+			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+			System.out.println(userService.authentificate("ol", "1111"));
+		} catch(Exception e) {
+			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>v>>");
+			e.printStackTrace();
+		}
+	}
 }
