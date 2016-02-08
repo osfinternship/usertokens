@@ -1,21 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Student Base example</title>
+<title>User tokens example</title>
 </head>
 <body>
+
+	<h2>Hello, please log in</h3>
 	<div style="padding-left:100px;font-family: monospace;">
-		<h2>Check if your surname is exists in db</h2>
-		<form action="/webapi/checkSurname" method="POST">
+		<h4>Login form:</h4>
+		
+		<form id="target" action="/webapi/login" method="POST" enctype='application/json'>
 			<div style="width: 200px; text-align: left;">
 				<div style="padding:10px;">
-					Please, enter surname: <input name="surname" />
+					Login: <input type="text" name="login" />
+				</div>
+				<div style="padding:10px;">
+					Password: <input type="password" name="password" />
 				</div>
 				<div style="padding:10px;text-align:center">
-					<input type="submit" value="Submit" />
+					<input id="test" type="submit" value="Log in" />
 				</div>
 			</div>
 		</form>
 	</div>
+	
+	<!-- JQuery -->
+	<script src="resources/js/jquery.min.js" type="text/javascript"></script>
+	
+	<!-- Convert to JSON function -->
+	<script src="resources/js/cnv2js.js" type="text/javascript"></script>
+	
+	<!-- JS code to handle event on submit click and send JSON to server -->
+	<script>
+
+	//submit form event
+	$('form').submit(function (e) {
+	    e.preventDefault();
+	    var data = $(this).serializeFormJSON();
+
+	    $.ajax({
+	        url: 'http://localhost:8080/webapi/login',
+	        type: 'post',
+	        data: JSON.stringify(data),
+	        headers: {
+	            "Accept": 'application/json',   //If your header name has spaces or any other char not appropriate
+	            "Content-type": 'application/json'  //for object property name, use quoted notation shown in second
+	        },
+	        dataType: 'json',
+	        success: function (data) {
+	            console.log(data);
+	        }
+	    });
+	    
+	    //redirect
+	    window.location.href = "http://localhost:8080/pages/page1.html";
+
+	});	
+	</script>
 </body>
 </html>

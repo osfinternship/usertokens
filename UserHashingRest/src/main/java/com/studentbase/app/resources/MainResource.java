@@ -1,8 +1,12 @@
 package com.studentbase.app.resources;
 
+import java.net.URISyntaxException;
 import java.util.List;
 
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
@@ -40,31 +44,24 @@ public class MainResource {
 
 		return Response.ok().entity("{'new_user': '" + studentService.getAllStudents().get(studentService.getAllStudents().size() - 1) + "'}").build();
 	}
-	
+*/
     @POST
-    @Path("/checkSurname")
-	@Produces(MediaType.TEXT_HTML)
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response checkIfSurnameExists(@FormParam("surname") String surname,
-    		@Context HttpServletResponse servletResponse) throws IOException {
-    		    	
-    	if(studentService.getBySurname(surname)) {
-    		LOG.info("Student with this surname is exists");
-        	servletResponse.sendRedirect("/webapi/list");
-        	return Response.ok().build();
-    	}
+    @Path("login")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response login(User user) {
     	
-    	if(surname != null) {
-    		Student student = new Student();
-    		student.setName(surname);
-    		student.setSurname(surname);
-    		student.setBirthDate(new Date());
-    		studentService.create(student);
-    		
-    		LOG.info("New student created: " + student);
-        	servletResponse.sendRedirect("/webapi/new");
-    	}
+    	LOG.info(">>>>>>>>>>>>>>>>>>>>>>. I'm here" + user.getLogin() + " " + user.getPassword());    
     	
-    	return Response.ok().build();
+        java.net.URI location = null;
+		try {
+			location = new java.net.URI("../pages/page1.html");
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return Response.temporaryRedirect(location).build();
+
+//    	return Response.ok().build();
     }
-*/}
+}

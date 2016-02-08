@@ -30,8 +30,5 @@ public class AppTest {
 	}
 	
 	@Test
-	public void test1() {
-		UserService userService = new UserServiceImpl();
-		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " + userService.findAllUsers());
-	}
+	public void test1() {}
 }
