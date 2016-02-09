@@ -8,21 +8,21 @@ import org.apache.log4j.Logger;
 
 import com.studentbase.app.entity.User;
 
-public class UserSecureContext implements SecurityContext{
+public class UserSecurityContext implements SecurityContext{
 	
 	// Logger
 	final static Logger LOG = Logger.getLogger(AuthentificationFilter.class);
 
-	private User user;
+	private String username;
 	private Principal principal;
 	
-    public UserSecureContext(final User user) {
-        this.user = user;
+    public UserSecurityContext(final String username) {
+        this.username = username;
         this.principal = new Principal() {
 
             public String getName() {
             	LOG.info("UserSecureContext: ");
-                return user.getLogin();
+                return username;
             }            
             
         };		

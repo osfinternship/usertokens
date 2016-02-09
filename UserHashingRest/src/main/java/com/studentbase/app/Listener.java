@@ -16,6 +16,6 @@ public class Listener implements javax.servlet.ServletContextListener {
 	}
 
 	public void contextInitialized(ServletContextEvent arg0) {
-		LOG.info("Listener init1" + ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		// TODO Auto-generated method stub	
 	}
 }

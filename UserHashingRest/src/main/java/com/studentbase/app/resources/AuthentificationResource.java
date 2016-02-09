@@ -15,10 +15,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import com.studentbase.app.Secured;
-import com.studentbase.app.UserSecureContext;
 import com.studentbase.app.entity.User;
 import com.studentbase.app.service.UserService;
 import com.studentbase.app.service.Impl.UserServiceImpl;
@@ -38,11 +38,10 @@ public class AuthentificationResource {
     @Produces(MediaType.APPLICATION_JSON)
 	public Response listOfUsers(@Context SecurityContext securityContext) {
 
-		LOG.info("Sec contx: " + securityContext);
+		LOG.info("List of users");
 	    Principal principal = securityContext.getUserPrincipal();
 	    String username = principal.getName();
 
-	    LOG.info("In rest username=" + username);
 		return Response.ok().build();
 	}
 	
@@ -94,13 +93,14 @@ public class AuthentificationResource {
      * @return
      */
     private String issueToken(String username) {
-        Random random = new SecureRandom();
-        String token = new BigInteger(130, random).toString(32);
-        LOG.info("issueToken: " +token);
-		return token;
         // Issue a token (can be a random String persisted to a database or a JWT token)
         // The issued token must be associated to a user
         // Return the issued token
+
+        Random random = new SecureRandom();
+        String token = new BigInteger(130, random).toString(20);
+        LOG.info("issueToken: " + token);
+		return token;
     }
 	
 	
