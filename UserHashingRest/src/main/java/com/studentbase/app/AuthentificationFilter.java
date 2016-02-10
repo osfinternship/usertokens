@@ -89,6 +89,15 @@ public class AuthentificationFilter implements ContainerRequestFilter {
     	}
     	else {
     		LOG.info("Comparing tokens: \n" + token + " \n" + cache.get(TOKEN_CACHE_KEY).getObjectValue().toString());	
+    		
+    		if(cache.get(TOKEN_CACHE_KEY).getObjectValue().equals(token)) {
+    			LOG.info("Tokens the same");
+    			return;
+    		}
+    		else {
+        		LOG.info("Tokens aren't the same");
+        		throw new RuntimeException("Tokens is different");
+    		}
     	}
         
 /*        if(cache.expired(1)) {
