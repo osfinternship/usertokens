@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -32,6 +31,9 @@ import com.studentbase.app.service.UserService;
 import com.studentbase.app.service.Impl.UserServiceImpl;
 
 import cache.CacheAPI;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 
 @Path("/authentification")
 public class AuthentificationResource {
@@ -43,7 +45,11 @@ public class AuthentificationResource {
 	UserService userService = new UserServiceImpl();
 	
 	// Cache management
-	CacheAPI<Integer, String> cache = new CacheAPI<>("cache1");
+//	CacheAPI<Integer, String> cache = new CacheAPI<>("cache1");
+	private static final String TOKEN_CACHE_NAME = "cache1";
+	private static final Integer TOKEN_CACHE_KEY = 1;
+
+	Cache cache = CacheManager.getInstance().getCache(TOKEN_CACHE_NAME);
 	
 	// Responses
     private static final Response OK  = Response.status(Response.Status.OK).build();	
@@ -61,19 +67,11 @@ public class AuthentificationResource {
 
 		GenericEntity<List<User>> users = new GenericEntity<List<User>>(userService.findAllUsers()) {};
 		
-		LOG.info("LIST OF USERS : " + users.getEntity());
-		LOG.info("___________________" + req.getProperty("header-auth"));
+		LOG.info("Get token from cache: " + cache.get(TOKEN_CACHE_KEY));
 		
-		LOG.info("1");
-		if(req.getProperty("header-auth") != null) {
-			LOG.info("2");
-			return Response.ok(users).header(HttpHeaders.AUTHORIZATION, req.getProperty("header-auth").toString()).build();
-		}
-
-		LOG.info(cache.get(1));
-		LOG.info(cache.expired(1));
+		return Response.ok(users).header(HttpHeaders.AUTHORIZATION, cache.get(TOKEN_CACHE_KEY).getObjectValue()).build();
 		
-		return Response.ok(users).build();//ok(users);
+		//return ok(users);
 	}
 	
 	@GET
@@ -128,7 +126,8 @@ public class AuthentificationResource {
             String token = issueToken(username);
 
             // Add element into cache
-            cache.put(1, token);
+            cache.put(new Element(TOKEN_CACHE_KEY, token));
+            //cache.put(1, token);
             
             // Return the token on the response
             return ok(" { \"token\": \"" + token + "\" }");
