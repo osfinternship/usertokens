@@ -1,27 +1,37 @@
 package com.studentbase.app.resources;
 
 import java.math.BigInteger;
-import java.security.Principal;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Random;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.studentbase.app.Secured;
 import com.studentbase.app.entity.User;
 import com.studentbase.app.service.UserService;
 import com.studentbase.app.service.Impl.UserServiceImpl;
+
+import cache.CacheAPI;
 
 @Path("/authentification")
 public class AuthentificationResource {
@@ -32,19 +42,72 @@ public class AuthentificationResource {
 	// User service
 	UserService userService = new UserServiceImpl();
 	
+	// Cache management
+	CacheAPI<Integer, String> cache = new CacheAPI<>("cache1");
+	
+	// Responses
+    private static final Response OK  = Response.status(Response.Status.OK).build();	
+    private static final Response BAD_REQUEST  = Response.status(Response.Status.BAD_REQUEST).build();
+    private static final Response NOT_FOUND    = Response.status(Response.Status.NOT_FOUND).build();
+    private static final Response SERVER_ERROR = Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
+	
 	@GET
     @Secured
 	@Path("/list")
     @Produces(MediaType.APPLICATION_JSON)
-	public Response listOfUsers(@Context SecurityContext securityContext) {
-
+	public Response listOfUsers(@Context ContainerRequestContext req) {
 		LOG.info("List of users");
-	    Principal principal = securityContext.getUserPrincipal();
-	    String username = principal.getName();
 
-		return Response.ok().build();
+		GenericEntity<List<User>> users = new GenericEntity<List<User>>(userService.findAllUsers()) {};
+		
+		LOG.info("LIST OF USERS : " + users.getEntity());
+		LOG.info("___________________" + req.getProperty("header-auth"));
+		
+		LOG.info("1");
+		if(req.getProperty("header-auth") != null) {
+			LOG.info("2");
+			return Response.ok(users).header(HttpHeaders.AUTHORIZATION, req.getProperty("header-auth").toString()).build();
+		}
+
+		LOG.info(cache.get(1));
+		LOG.info(cache.expired(1));
+		
+		return Response.ok(users).build();//ok(users);
 	}
 	
+	@GET
+    @Secured
+	@Path("/user/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response oneUser(@PathParam("id") int id) {
+	  User myUser = userService.findById(id);
+	  
+	  LOG.info("Get by id method: " + myUser);
+	  	  
+	  return ok(myUser);
+	}
+	
+    @POST
+    @Path("/user")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response newUser(User user) {
+        try {
+
+        	LOG.info("Save new user");
+        	
+        	user.setPassword(md5Apache(user.getPassword()));
+        	
+        	userService.saveUser(user);
+        	
+            return OK;
+
+        } catch (Exception e) {
+            return BAD_REQUEST;
+        }      
+    }
+    
     @POST
     @Path("/login")
     @Produces(MediaType.APPLICATION_JSON)
@@ -54,7 +117,7 @@ public class AuthentificationResource {
     	LOG.info("LOGIN: " + user);
     	
     	String username = user.getLogin();
-    	String password = user.getPassword();
+    	String password = md5Apache(user.getPassword());
     	
         try {
 
@@ -64,12 +127,60 @@ public class AuthentificationResource {
             // Issue a token for the user
             String token = issueToken(username);
 
+            // Add element into cache
+            cache.put(1, token);
+            
             // Return the token on the response
-            return Response.ok(" { \"token\": \"" + token + "\" }").build();
+            return ok(" { \"token\": \"" + token + "\" }");
 
         } catch (Exception e) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+            return UNAUTHORIZED;
         }      
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/logout")
+    public Response destroySession(@Context HttpServletRequest req) {
+ 	
+    	req.removeAttribute(HttpHeaders.AUTHORIZATION);
+    	
+        // returning json 
+        return ok(" { \"info\": \"session destroyed\" }");
+
+    }
+
+
+    @PUT
+    @Secured
+    @Path("/user/{id}")
+    @Produces({MediaType.APPLICATION_JSON})
+    @Consumes({MediaType.APPLICATION_JSON})
+    public Response updateUser(@PathParam("id") int id,
+    						   User user,
+    						   @Context SecurityContext securityContext) {
+    	
+    	LOG.info("Put method" + user + " " + id);
+    	
+	    User actualUser = userService.findById(id);
+	    
+	    actualUser.setPassword(md5Apache(user.getPassword()));
+	    
+	    userService.updateUser(actualUser);
+	    
+    	return OK;
+    }
+    
+	@DELETE
+    @Secured
+    @Path("/user/{id}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response deleteUser(@PathParam("id") int id){
+	    LOG.info("Delete method: " + id);
+	    
+        userService.deleteUserById(id);
+        
+        return OK;
     }
 
     /**
@@ -98,58 +209,30 @@ public class AuthentificationResource {
         // Return the issued token
 
         Random random = new SecureRandom();
-        String token = new BigInteger(130, random).toString(20);
+        String token = new BigInteger(130, random).toString(32);
         LOG.info("issueToken: " + token);
 		return token;
     }
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-/*	@GET
-	@Path("/list")
-    @Produces(MediaType.APPLICATION_JSON)
-	public Response listOfUsers() {
-        GenericEntity<List<User>> genericUsers = new GenericEntity<List<User>>(userService.findAllUsers()) {};
 
-		return Response.ok().entity(genericUsers).build();
+    /**
+     * MD5 hashing
+     * @param st String to hashing
+     * @return Md5 hashed string
+     */
+	public static String md5Apache(String st) {
+	    String md5Hex = DigestUtils.md5Hex(st);
+	 
+	    return md5Hex;
 	}
-	
-    @POST
-    @Path("login")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response login(User user) {
-    	
-    	if(userService.findByLogin(user.getLogin()) == null) {
-    		LOG.info("User login isn't exists");
-    	}
-    	else {
-    		LOG.info("User login is exists");
-    	}
-    			
-    	return Response.ok().build();
+
+    /**
+     * Return response with code 200(OK) and build returned entity
+     *
+     * @param entity Returned json instance from client
+     * @return HTTP code K
+     */
+    private Response ok(Object entity) {
+        return Response.ok().entity(entity).build();
     }
-*/}
+    
+}

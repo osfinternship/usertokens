@@ -64,7 +64,14 @@ public class UserDAOImpl implements UserDAO{
     @Override
     public void updateUser(User user) {
         try {
-            session.update(user);
+            session.createQuery("update User user set user.login = ?, user.password = ?, user.updatedAt = ?, user.enabled = ?"
+            		+ " where user.id = ?")
+            .setParameter(0, user.getLogin())
+            .setParameter(1, user.getPassword())
+            .setParameter(2, user.getUpdatedAt())
+            .setParameter(3, user.isEnabled())
+            .setParameter(4, user.getId())
+            .executeUpdate();
 
             session.beginTransaction().commit();
             LOG.info("User updated in db");
@@ -79,7 +86,8 @@ public class UserDAOImpl implements UserDAO{
     public void deleteUserById(int id) {
         try {
             session.createQuery("delete from User user where user.id = ?")
-                    .setParameter(0, id);
+                    .setParameter(0, id)
+                    .executeUpdate();
 
             session.beginTransaction().commit();
             LOG.info("User deleted from db");

@@ -42,7 +42,7 @@ public class User implements Serializable{
 
     @Column(name = "enabled")
     private boolean enabled;
-
+    
     public int getId() {
         return id;
     }
