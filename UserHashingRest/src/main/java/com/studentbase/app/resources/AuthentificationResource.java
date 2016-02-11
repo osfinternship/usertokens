@@ -14,7 +14,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
@@ -30,9 +29,8 @@ import com.studentbase.app.entity.User;
 import com.studentbase.app.service.UserService;
 import com.studentbase.app.service.Impl.UserServiceImpl;
 
-import cache.CacheAPI;
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
 @Path("/authentification")
@@ -49,8 +47,18 @@ public class AuthentificationResource {
 	private static final String TOKEN_CACHE_NAME = "cache1";
 	private static final Integer TOKEN_CACHE_KEY = 1;
 
-	Cache cache = CacheManager.getInstance().getCache(TOKEN_CACHE_NAME);
+	static CacheManager cacheManager;
+	static Ehcache cache;
 	
+	public static CacheManager getCacheManager() {
+		return cacheManager;
+	}
+
+	public static void setCacheManager(CacheManager cacheManager) {
+		AuthentificationResource.cacheManager = cacheManager;
+		cache = cacheManager.getEhcache(TOKEN_CACHE_NAME);
+	}
+
 	// Responses
     private static final Response OK  = Response.status(Response.Status.OK).build();	
     private static final Response BAD_REQUEST  = Response.status(Response.Status.BAD_REQUEST).build();
@@ -62,7 +70,7 @@ public class AuthentificationResource {
     @Secured
 	@Path("/list")
     @Produces(MediaType.APPLICATION_JSON)
-	public Response listOfUsers(@Context ContainerRequestContext req) {
+	public Response listOfUsers(/*@Context ContainerRequestContext req*/) {
 		LOG.info("List of users");
 
 		GenericEntity<List<User>> users = new GenericEntity<List<User>>(userService.findAllUsers()) {};

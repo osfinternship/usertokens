@@ -16,9 +16,8 @@ import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
 
-import cache.CacheAPI;
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
 @Secured
@@ -34,8 +33,17 @@ public class AuthentificationFilter implements ContainerRequestFilter {
 	private static final String TOKEN_CACHE_NAME = "cache1";
 	private static final Integer TOKEN_CACHE_KEY = 1;
 
-	Cache cache = CacheManager.getInstance().getCache(TOKEN_CACHE_NAME);
+	static CacheManager cacheManager;
+	static Ehcache cache;
 	
+	public static Ehcache getCache() {
+		return cache;
+	}
+
+	public static void setCache(CacheManager cacheManager) {
+		cache = cacheManager.getEhcache(TOKEN_CACHE_NAME);
+	}
+
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
 	    // Get the HTTP Authorization header from the request
@@ -124,19 +132,20 @@ public class AuthentificationFilter implements ContainerRequestFilter {
         }
 */    }
 
-public boolean expired(final Integer key) {
-    boolean expired = true;
-    // Do a quiet get so we don't change the last access time.
-    final Element element = cache.getQuiet(key);
-    if (element != null) {
-        expired = cache.isExpired(element);
+    public boolean expired(final Integer key) {
+    	boolean expired = true;
+    	// Do a quiet get so we don't change the last access time.
+    	final Element element = cache.getQuiet(key);
+    	if (element != null) {
+    		expired = cache.isExpired(element);
+    	}
+    	
+    	return expired;
     }
-    return expired;
-}
 
-private String generateNewToken() {
-    Random random = new SecureRandom();
-    return new BigInteger(130, random).toString(32);
-}
+    private String generateNewToken() {
+    	Random random = new SecureRandom();
+    	return new BigInteger(130, random).toString(32);
+    }
 }
 

@@ -29,6 +29,18 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   
+  <repositories>
+  
+  	<!-- Terracotta -->
+<repository> 
+    <id>terracotta-repository</id> 
+    <url>http://www.terracotta.org/download/reflector/releases</url> 
+    <releases> 
+        <enabled>true</enabled> 
+    </releases> 
+</repository>
+  </repositories>
+  
   <!-- Jersey -->
   <dependencyManagement>
     <dependencies>
@@ -104,13 +116,21 @@
 		<artifactId>ehcache</artifactId>
 		<version>2.9.0</version>
 	</dependency>
+	
+<dependency>
+  <groupId>org.terracotta</groupId>
+  <artifactId>terracotta-toolkit-runtime</artifactId>
+  <version>4.3.1</version>
+</dependency>	
     
   </dependencies>
 
   <!-- Build properties and plugins -->
   <build>  
+  
     <!-- Maven compiler plugin -->
     <plugins>
+    
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
