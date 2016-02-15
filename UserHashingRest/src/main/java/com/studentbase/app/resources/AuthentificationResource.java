@@ -43,19 +43,21 @@ public class AuthentificationResource {
 	UserService userService = new UserServiceImpl();
 	
 	// Cache management
-//	CacheAPI<Integer, String> cache = new CacheAPI<>("cache1");
 	private static final String TOKEN_CACHE_NAME = "cache1";
 	private static final Integer TOKEN_CACHE_KEY = 1;
 
+	// cache manager
 	static CacheManager cacheManager;
+	
+	// cache instance
 	static Ehcache cache;
 	
+	// getter and setter of cache manager
 	public static CacheManager getCacheManager() {
 		return cacheManager;
 	}
 
 	public static void setCacheManager(CacheManager cacheManager) {
-		AuthentificationResource.cacheManager = cacheManager;
 		cache = cacheManager.getEhcache(TOKEN_CACHE_NAME);
 	}
 

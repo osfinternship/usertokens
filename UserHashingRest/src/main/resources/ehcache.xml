@@ -18,9 +18,6 @@
     disk cache, which in this configuration will go to wherever java.io.tmp is
     defined on your system. On a standard Linux system this will be /tmp" -->
     
-    <!-- maxEntriesLocalHeap="10000"
-		maxEntriesLocalDisk="1000" 
-		 -->
 	<cache name="cache1" 
 		maxEntriesLocalHeap="10000"
 		maxEntriesLocalDisk="1000"
@@ -29,17 +26,16 @@
 		timeToIdleSeconds="15" timeToLiveSeconds="999"
 		memoryStoreEvictionPolicy="LFU" 
 		transactionalMode="off">
-		
-		<!-- localTempSwap -->
-		<persistence strategy="localTempSwap" />
-		
-		<!-- Include the terracotta element so that the data set will be 
-    		 managed as a client of the Terracotta server array.  --> 
-<!--  		<terracotta/>
- -->	</cache>
+	</cache>
+	
+	<cache name="weather_cache" 
+		maxEntriesLocalHeap="10000"
+		maxEntriesLocalDisk="1000"
+		eternal="false" 
+		diskSpoolBufferSizeMB="20"
+		timeToIdleSeconds="0" timeToLiveSeconds="0"
+		memoryStoreEvictionPolicy="LFU" 
+		transactionalMode="off">
+	</cache>
 
-  <!-- Specify where to find the server array configuration. In this 
-  case, the configuration is retrieved from the local server. --> 
-<!--    <terracottaConfig url="localhost:9510" /> 
- -->
 </ehcache>

@@ -29,13 +29,16 @@ public class AuthentificationFilter implements ContainerRequestFilter {
 	final static Logger LOG = Logger.getLogger(AuthentificationFilter.class);
 
 	// Cache management
-	//CacheAPI<Integer, String> cache = new CacheAPI<>("cache1");	
 	private static final String TOKEN_CACHE_NAME = "cache1";
 	private static final Integer TOKEN_CACHE_KEY = 1;
 
+	// cache manager
 	static CacheManager cacheManager;
+	
+	// cache instance
 	static Ehcache cache;
 	
+	// getter and setter of cache manager
 	public static Ehcache getCache() {
 		return cache;
 	}
@@ -67,8 +70,6 @@ public class AuthentificationFilter implements ContainerRequestFilter {
             // Validate the token and send header
             validateToken(token);
         	
-            LOG.info("AFTER VALIDATION: " + token);
-
         } catch (Exception e) {
         	LOG.error("UNAUTHORIZED");
             
@@ -85,7 +86,6 @@ public class AuthentificationFilter implements ContainerRequestFilter {
     private void validateToken(String token) {
         // Check if it was issued by the server and if it's not expired
         // Throw an Exception if the token is invalid    	
-    	LOG.info("INSIDE VALIDATION");
     	
     	if(expired(TOKEN_CACHE_KEY)) {
     		LOG.info("Cache is expired!");
@@ -107,31 +107,13 @@ public class AuthentificationFilter implements ContainerRequestFilter {
         		throw new RuntimeException("Tokens is different");
     		}
     	}
-        
-/*        if(cache.expired(1)) {
-        	LOG.info("Token is expired - " + cache.get(1));
-      	
-            Random random = new SecureRandom();
-            String newToken = new BigInteger(130, random).toString(32);
+    }
 
-            cache.put(1, newToken);
-
-        	LOG.info("Generated new token - " + cache.get(1));
-        	
-        	return newToken;
-        }
-        else {    
-        	if(cache.get(1).equals(token)) {
-        		LOG.info("Tokens the same");
-        		return null;
-        	}
-        	else {
-        		LOG.info("Tokens aren't the same");
-        		throw new RuntimeException("Tokens is different");
-        	}
-        }
-*/    }
-
+    /**
+     * Check if token expired
+     * @param key
+     * @return True of False
+     */
     public boolean expired(final Integer key) {
     	boolean expired = true;
     	// Do a quiet get so we don't change the last access time.
@@ -143,6 +125,10 @@ public class AuthentificationFilter implements ContainerRequestFilter {
     	return expired;
     }
 
+    /**
+     * Generation new token
+     * @return New token
+     */
     private String generateNewToken() {
     	Random random = new SecureRandom();
     	return new BigInteger(130, random).toString(32);

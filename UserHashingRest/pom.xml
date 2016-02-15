@@ -117,11 +117,11 @@
 		<version>2.9.0</version>
 	</dependency>
 	
-<dependency>
-  <groupId>org.terracotta</groupId>
-  <artifactId>terracotta-toolkit-runtime</artifactId>
-  <version>4.3.1</version>
-</dependency>	
+	<dependency>
+  		<groupId>org.terracotta</groupId>
+  		<artifactId>terracotta-toolkit-runtime</artifactId>
+  		<version>4.3.1</version>
+	</dependency>	
     
   </dependencies>
 

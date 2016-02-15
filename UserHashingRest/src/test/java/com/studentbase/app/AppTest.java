@@ -1,6 +1,9 @@
 package com.studentbase.app;
 
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -12,9 +15,6 @@ import org.junit.runners.MethodSorters;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Element;
-import net.sf.ehcache.config.ConfigurationFactory;
-import net.sf.ehcache.config.TerracottaClientConfiguration;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AppTest {
@@ -52,28 +52,41 @@ public class AppTest {
 	    return url;
 //	    return url != null ? url : instance.getClass().getResource("/" + resourceName);
 	  }
+	 
+		// cache manager
+		static CacheManager cacheManager;
+		
+		// cache instance
+		static Ehcache cache;
+		
+		// getter and setter of cache manager
+		public static CacheManager getCacheManager() {
+			return cacheManager;
+		}
 
+		public static void setCacheManager(CacheManager cacheManager) {
+			cache = cacheManager.getEhcache("weather_cache");
+		}
+
+	 @Test
+	 public void test1() {	 
+//		 System.out.println(cache.get("Ivano-Frankivsk"));
+//		 System.out.println(cache.get("Lviv"));
+	 }
 	 
 	@Test
-	public void test() {
-		CacheManager cm = null;
+	public void test() throws ParseException {
+		SimpleDateFormat dateF = new SimpleDateFormat("dd-M-yyyy");
+		System.out.println();
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
+		String dateInString = dateF.format(new Date()) + " 23:59:59";
+		Date date = sdf.parse(dateInString);
+		System.out.println(date.getTime()); //Tue Aug 31 10:20:56 SGT 1982
+        
+		System.out.println(System.currentTimeMillis());
 		
-		//cm.newInstance();
-		
-        String teracotaURL = "localhost:9510";
-        URL url = find("ehcache.xml");
-		 net.sf.ehcache.config.Configuration config = ConfigurationFactory.parseConfiguration(url);
-	        TerracottaClientConfiguration tcf = new TerracottaClientConfiguration();
-	            tcf.setUrl(teracotaURL);
-	            tcf.setRejoin(false);
-	            config.addTerracottaConfig(tcf);
-	            config.setUpdateCheck(false);
-	            cm = CacheManager.create(config);  
-		
-		LOG.info("Cache created");
+		System.out.println((date.getTime() - System.currentTimeMillis()) / 1000);
 
-		Ehcache cache = cm.getEhcache("cache1");
-		cache.put(new Element(1, "test"));
-		System.out.println(cache.get(1));
+
 	}
 }
