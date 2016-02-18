@@ -23,7 +23,7 @@
 		maxEntriesLocalDisk="1000"
 		eternal="false" 
 		diskSpoolBufferSizeMB="20"
-		timeToIdleSeconds="15" timeToLiveSeconds="999"
+		timeToIdleSeconds="900" timeToLiveSeconds="0"
 		memoryStoreEvictionPolicy="LFU" 
 		transactionalMode="off">
 	</cache>

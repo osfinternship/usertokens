@@ -11,10 +11,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
+
+import com.studentbase.app.Secured;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
@@ -28,13 +31,19 @@ public class WeatherResource {
 	final static Logger LOG = Logger.getLogger(WeatherResource.class);
 	
 	// Cache management
-	private static final String TOKEN_CACHE_NAME = "weather_cache";
+	private static final String AUTHORIZATION_CACHE_NAME = "cache1";
+	private static final String WEATHER_CACHE_NAME = "weather_cache";
+
+	private static final Integer AUTHORIZATION_TOKEN_KEY = 1;
+	
+    private static final Response SERVER_ERROR = Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 
 	// cache manager
 	static CacheManager cacheManager;
 	
 	// cache instance
-	static Ehcache cache;
+	static Ehcache authorizationCache;
+	static Ehcache weatherCache;
 	
 	// getter and setter of cache manager
 	public static CacheManager getCacheManager() {
@@ -42,37 +51,26 @@ public class WeatherResource {
 	}
 
 	public static void setCacheManager(CacheManager cacheManager) {
-		cache = cacheManager.getEhcache(TOKEN_CACHE_NAME);
+		authorizationCache = cacheManager.getEhcache(AUTHORIZATION_CACHE_NAME);
+		weatherCache = cacheManager.getEhcache(WEATHER_CACHE_NAME);
 	}
 
 	// API key
 	private static final String API_KEY = "27d4f937fd01327742bdbecb58657ea3";
-	
-	// Responses
-    private static final Response OK  = Response.status(Response.Status.OK).build();	
-    private static final Response BAD_REQUEST  = Response.status(Response.Status.BAD_REQUEST).build();
-    private static final Response NOT_FOUND    = Response.status(Response.Status.NOT_FOUND).build();
-    private static final Response SERVER_ERROR = Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
-
-    /**
-     * Return response with code 200(OK) and build returned entity
-     *
-     * @param entity Returned json instance from client
-     * @return HTTP code K
-     */
-    private Response ok(Object entity) {
-        return Response.ok().entity(entity).build();
-    }
 
 	@GET
+    @Secured
 	@Path("/city")
     @Produces(MediaType.APPLICATION_JSON)
 	public Response getWeatherByCity(@QueryParam("name") String city) {
 		
 		LOG.info("CITY = " + city);
-				
-		if(expired(city)) {
+
+		try {
+			
+		  if(expired(city)) {
+			
+			LOG.info("REQUEST TO WEATHER API...");
 			
 			// get client service
 			Client client = ClientBuilder.newClient();
@@ -90,20 +88,27 @@ public class WeatherResource {
 			LOG.info("NEW ELEMENT IN CACHE: " + city);
 			
 			// put new element into cache
-			cache.put(new Element(city, resp.readEntity(String.class).toString()));	
+			weatherCache.put(new Element(city, resp.readEntity(String.class).toString()));	
 			
 			// create dynamic cache configuration
-			CacheConfiguration config = cache.getCacheConfiguration();
+			CacheConfiguration config = weatherCache.getCacheConfiguration();
 			
 			// set time to live in the cache
 			config.setTimeToLiveSeconds(calculateDifference(System.currentTimeMillis()));
 
-		}
+		  }
 				
-		LOG.info("GET INFO FROM CACHE: " + cache.get(city) + "\nTime to dead: " + (cache.get(city).getTimeToLive()));
+		} catch (Exception e) {
+			return SERVER_ERROR;
+		}
+		
+		LOG.info("GET INFO FROM CACHE: " + weatherCache.get(city) + "\nTime to dead: " + (weatherCache.get(city).getTimeToLive()));
 		
 		// return entity
-		return ok("{ \"result\": \"" + cache.get(city).getObjectValue() + "\" }");
+		return Response.ok()
+				.entity("{ \"result\": \"" + weatherCache.get(city).getObjectValue() + "\" }")
+				.header(HttpHeaders.AUTHORIZATION, authorizationCache.get(AUTHORIZATION_TOKEN_KEY).getObjectValue())
+				.build();
 	}
 
     /**
@@ -114,9 +119,9 @@ public class WeatherResource {
     public boolean expired(final String key) {
     	boolean expired = true;
     	// Do a quiet get so we don't change the last access time.
-    	final Element element = cache.getQuiet(key);
+    	final Element element = weatherCache.getQuiet(key);
     	if (element != null) {
-    		expired = cache.isExpired(element);
+    		expired = weatherCache.isExpired(element);
     	}
     	
     	return expired;
@@ -141,6 +146,8 @@ public class WeatherResource {
 		}
         		
 		LOG.info("LEAVE: " + (date.getTime() - currentTimeInMilis) / 1000);
+		
 		return (date.getTime() - currentTimeInMilis) / 1000;
 	}
+
 }

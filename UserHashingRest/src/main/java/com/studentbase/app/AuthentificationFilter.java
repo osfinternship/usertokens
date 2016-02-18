@@ -90,10 +90,11 @@ public class AuthentificationFilter implements ContainerRequestFilter {
     	if(expired(TOKEN_CACHE_KEY)) {
     		LOG.info("Cache is expired!");
 
-    		cache.put(new Element(TOKEN_CACHE_KEY, generateNewToken()));
+//    		cache.put(new Element(TOKEN_CACHE_KEY, generateNewToken()));
+    		throw new RuntimeException("Tokens is expired, please login again!");
     		
-    		LOG.info("New token generated and pushed into cache: \n" + cache.getQuiet(TOKEN_CACHE_KEY));
-    		return;
+//    		LOG.info("New token generated and pushed into cache: \n" + cache.getQuiet(TOKEN_CACHE_KEY));
+//    		return;
     	}
     	else {
     		LOG.info("Comparing tokens: \n" + token + " \n" + cache.get(TOKEN_CACHE_KEY).getObjectValue().toString());	

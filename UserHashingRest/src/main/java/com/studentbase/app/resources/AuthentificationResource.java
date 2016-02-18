@@ -28,6 +28,10 @@ import com.studentbase.app.Secured;
 import com.studentbase.app.entity.User;
 import com.studentbase.app.service.UserService;
 import com.studentbase.app.service.Impl.UserServiceImpl;
+import com.studentbase.app.temp.UserStrategy;
+import com.studentbase.app.temp.dao.impl.UserCassandraStrategyImpl;
+import com.studentbase.app.temp.dao.impl.UserMySQLStrategyImpl;
+import com.studentbase.app.temp.entity.AbstractUser;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
@@ -38,6 +42,8 @@ public class AuthentificationResource {
 
 	// Logger
 	final static Logger LOG = Logger.getLogger(AuthentificationResource.class);
+	
+	static int strategy;
 	
 	// User service
 	UserService userService = new UserServiceImpl();
@@ -60,7 +66,7 @@ public class AuthentificationResource {
 	public static void setCacheManager(CacheManager cacheManager) {
 		cache = cacheManager.getEhcache(TOKEN_CACHE_NAME);
 	}
-
+	
 	// Responses
     private static final Response OK  = Response.status(Response.Status.OK).build();	
     private static final Response BAD_REQUEST  = Response.status(Response.Status.BAD_REQUEST).build();
@@ -68,6 +74,22 @@ public class AuthentificationResource {
     private static final Response SERVER_ERROR = Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
 	
+	private static UserStrategy userStrategy;
+	
+	static {
+		strategy = 0;
+		if(strategy == 0) {
+			setUserStrategy(new UserMySQLStrategyImpl());
+		} else {
+			setUserStrategy(new UserCassandraStrategyImpl());
+		}
+		System.out.println(userStrategy.findAllUsers());
+	}
+	
+	public static void setUserStrategy(UserStrategy actualUserStrategy) {
+		userStrategy = actualUserStrategy;
+	}
+    
 	@GET
     @Secured
 	@Path("/list")
@@ -75,13 +97,12 @@ public class AuthentificationResource {
 	public Response listOfUsers(/*@Context ContainerRequestContext req*/) {
 		LOG.info("List of users");
 
-		GenericEntity<List<User>> users = new GenericEntity<List<User>>(userService.findAllUsers()) {};
-		
-		LOG.info("Get token from cache: " + cache.get(TOKEN_CACHE_KEY));
-		
-		return Response.ok(users).header(HttpHeaders.AUTHORIZATION, cache.get(TOKEN_CACHE_KEY).getObjectValue()).build();
-		
-		//return ok(users);
+		GenericEntity<List<AbstractUser>> users = new GenericEntity<List<AbstractUser>>(userStrategy.findAllUsers()) {};
+//		GenericEntity<List<User>> users = new GenericEntity<List<User>>(userService.findAllUsers()) {};
+				
+		return Response.ok(users)
+				.header(HttpHeaders.AUTHORIZATION, cache.get(TOKEN_CACHE_KEY).getObjectValue())
+				.build();
 	}
 	
 	@GET
@@ -104,7 +125,7 @@ public class AuthentificationResource {
         try {
 
         	LOG.info("Save new user");
-        	
+        	      	
         	user.setPassword(md5Apache(user.getPassword()));
         	
         	userService.saveUser(user);
@@ -120,7 +141,7 @@ public class AuthentificationResource {
     @Path("/login")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response authenticateUser(User user) {
+    public Response authenticateUser(AbstractUser user) {
 
     	LOG.info("LOGIN: " + user);
     	
@@ -143,7 +164,7 @@ public class AuthentificationResource {
             return ok(" { \"token\": \"" + token + "\" }");
 
         } catch (Exception e) {
-            return UNAUTHORIZED;
+            return SERVER_ERROR;
         }      
     }
 
@@ -199,7 +220,9 @@ public class AuthentificationResource {
      * @throws Exception User isn't exists
      */
     private void authenticate(String username, String password) throws Exception {
-    	if(userService.authentificate(username, password)){
+    	setUserStrategy(new UserCassandraStrategyImpl());
+    	if(userStrategy.authentificate(username, password)) {
+//    	if(userService.authentificate(username, password)){
     		LOG.info("Is authentificate");
     		return;
     	}
