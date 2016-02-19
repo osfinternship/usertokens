@@ -43,7 +43,18 @@ public class UserMySQL extends AbstractUser implements Serializable{
     @Column(name = "enabled")
     private boolean enabled;
     
-    public int getId() {
+    public UserMySQL(){}
+    
+    public UserMySQL(AbstractUser user) {
+    	this.login = user.getLogin();
+    	this.password = user.getPassword();
+    	this.role = user.getRole();
+    	this.createdAt = user.getCreatedAt();
+    	this.updatedAt = user.getUpdatedAt();
+    	this.enabled = user.isEnabled();
+    }
+    
+	public int getId() {
         return id;
     }
 

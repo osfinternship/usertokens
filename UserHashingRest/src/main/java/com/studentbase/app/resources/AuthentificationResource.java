@@ -32,9 +32,11 @@ import com.studentbase.app.temp.UserStrategy;
 import com.studentbase.app.temp.dao.impl.UserCassandraStrategyImpl;
 import com.studentbase.app.temp.dao.impl.UserMySQLStrategyImpl;
 import com.studentbase.app.temp.entity.AbstractUser;
+import com.studentbase.app.temp.entity.UserCassandra;
+import com.studentbase.app.temp.entity.UserMySQL;
 
+import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
 @Path("/authentification")
@@ -42,30 +44,12 @@ public class AuthentificationResource {
 
 	// Logger
 	final static Logger LOG = Logger.getLogger(AuthentificationResource.class);
-	
-	static int strategy;
-	
-	// User service
-	UserService userService = new UserServiceImpl();
-	
+			
 	// Cache management
 	private static final String TOKEN_CACHE_NAME = "cache1";
 	private static final Integer TOKEN_CACHE_KEY = 1;
-
-	// cache manager
-	static CacheManager cacheManager;
 	
-	// cache instance
-	static Ehcache cache;
-	
-	// getter and setter of cache manager
-	public static CacheManager getCacheManager() {
-		return cacheManager;
-	}
-
-	public static void setCacheManager(CacheManager cacheManager) {
-		cache = cacheManager.getEhcache(TOKEN_CACHE_NAME);
-	}
+	static Cache cache = CacheManager.getInstance().getCache(TOKEN_CACHE_NAME);
 	
 	// Responses
     private static final Response OK  = Response.status(Response.Status.OK).build();	
@@ -76,14 +60,15 @@ public class AuthentificationResource {
 	
 	private static UserStrategy userStrategy;
 	
+	static int strategy;
+
 	static {
-		strategy = 0;
+		strategy = 1;
 		if(strategy == 0) {
 			setUserStrategy(new UserMySQLStrategyImpl());
 		} else {
 			setUserStrategy(new UserCassandraStrategyImpl());
 		}
-		System.out.println(userStrategy.findAllUsers());
 	}
 	
 	public static void setUserStrategy(UserStrategy actualUserStrategy) {
@@ -94,11 +79,10 @@ public class AuthentificationResource {
     @Secured
 	@Path("/list")
     @Produces(MediaType.APPLICATION_JSON)
-	public Response listOfUsers(/*@Context ContainerRequestContext req*/) {
+	public Response listOfUsers() {
 		LOG.info("List of users");
 
 		GenericEntity<List<AbstractUser>> users = new GenericEntity<List<AbstractUser>>(userStrategy.findAllUsers()) {};
-//		GenericEntity<List<User>> users = new GenericEntity<List<User>>(userService.findAllUsers()) {};
 				
 		return Response.ok(users)
 				.header(HttpHeaders.AUTHORIZATION, cache.get(TOKEN_CACHE_KEY).getObjectValue())
@@ -109,30 +93,41 @@ public class AuthentificationResource {
     @Secured
 	@Path("/user/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response oneUser(@PathParam("id") int id) {
-	  User myUser = userService.findById(id);
+	public Response oneUser(@PathParam("id") String id) {
+		
+		try {
+			AbstractUser myUser = (AbstractUser) userStrategy.findById(id);
 	  
-	  LOG.info("Get by id method: " + myUser);
+			LOG.info("Get by id method: " + myUser);
 	  	  
-	  return ok(myUser);
+			return ok(myUser);
+		} catch (Exception e) {
+        	LOG.error(e.getMessage());
+        	return SERVER_ERROR;
+		}
 	}
 	
     @POST
     @Path("/user")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response newUser(User user) {
+    public Response newUser(AbstractUser user) {
         try {
 
-        	LOG.info("Save new user");
+        	LOG.info("Save new user" + user);
         	      	
         	user.setPassword(md5Apache(user.getPassword()));
         	
-        	userService.saveUser(user);
+        	if(strategy == 0) {
+        		userStrategy.saveUser(new UserMySQL(user));
+        	} else {
+        		userStrategy.saveUser(new UserCassandra(user));
+        	}
         	
             return OK;
 
         } catch (Exception e) {
+        	LOG.error(e.getMessage());
             return BAD_REQUEST;
         }      
     }
@@ -149,7 +144,6 @@ public class AuthentificationResource {
     	String password = md5Apache(user.getPassword());
     	
         try {
-
             // Authenticate the user using the credentials provided
             authenticate(username, password);
 
@@ -158,12 +152,12 @@ public class AuthentificationResource {
 
             // Add element into cache
             cache.put(new Element(TOKEN_CACHE_KEY, token));
-            //cache.put(1, token);
             
             // Return the token on the response
             return ok(" { \"token\": \"" + token + "\" }");
 
         } catch (Exception e) {
+        	LOG.error(e.getMessage());
             return SERVER_ERROR;
         }      
     }
@@ -175,9 +169,7 @@ public class AuthentificationResource {
  	
     	req.removeAttribute(HttpHeaders.AUTHORIZATION);
     	
-        // returning json 
         return ok(" { \"info\": \"session destroyed\" }");
-
     }
 
 
@@ -186,31 +178,41 @@ public class AuthentificationResource {
     @Path("/user/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response updateUser(@PathParam("id") int id,
-    						   User user,
-    						   @Context SecurityContext securityContext) {
+    public Response updateUser(@PathParam("id") String id,
+    						   AbstractUser user) {
     	
-    	LOG.info("Put method" + user + " " + id);
+    	try {
+    		LOG.info("Put method" + user + " " + id);
     	
-	    User actualUser = userService.findById(id);
+    		AbstractUser actualUser = (AbstractUser) userStrategy.findById(id);
 	    
-	    actualUser.setPassword(md5Apache(user.getPassword()));
+    		actualUser.setPassword(md5Apache(user.getPassword()));
 	    
-	    userService.updateUser(actualUser);
+	    	userStrategy.updateUser(actualUser);
 	    
-    	return OK;
+    		return OK;
+        } catch (Exception e) {
+        	LOG.error(e.getMessage());
+            return SERVER_ERROR;
+        }      
     }
     
 	@DELETE
     @Secured
     @Path("/user/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response deleteUser(@PathParam("id") int id){
-	    LOG.info("Delete method: " + id);
+    public Response deleteUser(@PathParam("id") String id){
+		
+		try {
+			LOG.info("Delete method: " + id);
 	    
-        userService.deleteUserById(id);
-        
-        return OK;
+			userStrategy.deleteUserById(id);
+
+			return OK;
+        } catch (Exception e) {
+        	LOG.error(e.getMessage());
+            return SERVER_ERROR;
+        }      
     }
 
     /**
@@ -220,9 +222,7 @@ public class AuthentificationResource {
      * @throws Exception User isn't exists
      */
     private void authenticate(String username, String password) throws Exception {
-    	setUserStrategy(new UserCassandraStrategyImpl());
     	if(userStrategy.authentificate(username, password)) {
-//    	if(userService.authentificate(username, password)){
     		LOG.info("Is authentificate");
     		return;
     	}

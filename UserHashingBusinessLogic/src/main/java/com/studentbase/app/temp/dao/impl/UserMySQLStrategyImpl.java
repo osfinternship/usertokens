@@ -19,9 +19,9 @@ public class UserMySQLStrategyImpl implements UserMySQLStrategy {
 	private static Session session = HibernateUtil.getSessionFactory().openSession();
 
 	@Override
-	public UserMySQL findById(int id) {
+	public UserMySQL findById(String id) {
         LOG.info("Get by id: " + id);
-        return (UserMySQL) session.get(UserMySQL.class, id);
+        return (UserMySQL) session.get(UserMySQL.class, Integer.parseInt(id));
 	}
 
 	@Override
@@ -48,9 +48,11 @@ public class UserMySQLStrategyImpl implements UserMySQLStrategy {
 
 	@Override
 	public void saveUser(UserMySQL user) {
+		LOG.info("new user: "+ user);
         try {
             session.save(user);
 
+            LOG.info("commit");
             session.beginTransaction().commit();
             LOG.info("User saved into db");
 
@@ -80,10 +82,10 @@ public class UserMySQLStrategyImpl implements UserMySQLStrategy {
 	}
 
 	@Override
-	public void deleteUserById(int id) {
+	public void deleteUserById(String id) {
         try {
             session.createQuery("delete from UserMySQL user where user.id = ?")
-                    .setParameter(0, id)
+                    .setParameter(0, Integer.parseInt(id))
                     .executeUpdate();
 
             session.beginTransaction().commit();

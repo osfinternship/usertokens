@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface UserStrategy<T> {
     
-	T findById(int id);
+	T findById(String id);
 
     T findByLogin(String login);
     
@@ -14,7 +14,7 @@ public interface UserStrategy<T> {
 
     void updateUser(T user);
 
-    void deleteUserById(int id);
+    void deleteUserById(String id);
 
     List<T> findAllUsers();
 

@@ -16,8 +16,8 @@ import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
 
+import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
 @Secured
@@ -32,21 +32,8 @@ public class AuthentificationFilter implements ContainerRequestFilter {
 	private static final String TOKEN_CACHE_NAME = "cache1";
 	private static final Integer TOKEN_CACHE_KEY = 1;
 
-	// cache manager
-	static CacheManager cacheManager;
+	static Cache cache = CacheManager.getInstance().getCache("cache1");
 	
-	// cache instance
-	static Ehcache cache;
-	
-	// getter and setter of cache manager
-	public static Ehcache getCache() {
-		return cache;
-	}
-
-	public static void setCache(CacheManager cacheManager) {
-		cache = cacheManager.getEhcache(TOKEN_CACHE_NAME);
-	}
-
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
 	    // Get the HTTP Authorization header from the request

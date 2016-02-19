@@ -1,6 +1,5 @@
 package com.studentbase.app.temp.dao.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -24,33 +23,29 @@ public class UserCassandraStrategyImpl implements UserCassandraStrategy {
 	private static MappingManager mappingManager;
 	
 	@Override
-	public List<UserCassandra> findAllUsers() {
+	public UserCassandra findById(String id) {
 		mappingManager = new MappingManager(session);
 		Mapper<UserCassandra> mapper = mappingManager.mapper(UserCassandra.class);
-		List<UserCassandra> lists = new ArrayList<>();
-		ResultSet resultSet =  session.execute("SELECT * FROM mykeyspace.users;");
+		ResultSet resultSet = session.execute("SELECT * FROM mykeyspace.users WHERE id = " + id + ";");
 		
 		Result<UserCassandra> result = mapper.map(resultSet);
-		lists = result.all();
-		return lists;
-	}
-
-	@Override
-	public UserCassandra findById(int id) {
-		// TODO Auto-generated method stub
-		return null;
+		return result.one();
 	}
 
 	@Override
 	public UserCassandra findByLogin(String login) {
-		// TODO Auto-generated method stub
-		return null;
+		mappingManager = new MappingManager(session);
+		Mapper<UserCassandra> mapper = mappingManager.mapper(UserCassandra.class);
+		ResultSet resultSet = session.execute("SELECT * FROM mykeyspace.users WHERE login = '" + login + "';");
+		
+		Result<UserCassandra> result = mapper.map(resultSet);
+		return result.one();
 	}
 
 	@Override
 	public boolean authentificate(String username, String password) {
 		
-        if(session.execute("SELECT * FROM users user where user.login = '" + username + "' and user.password = '" + password + "'")
+        if(session.execute("SELECT * FROM mykeyspace.users WHERE login = '" + username + "' AND password = '" + password + "' ALLOW FILTERING;")
         		.one() != null) {
         	LOG.info("Credentials is true");
         	return true;
@@ -62,21 +57,43 @@ public class UserCassandraStrategyImpl implements UserCassandraStrategy {
 
 	@Override
 	public void saveUser(UserCassandra user) {
-		// TODO Auto-generated method stub
 		
+		try {
+			session.execute("INSERT INTO mykeyspace.users(id, login, password, role, enabled) " +
+					"VALUES(now(), '" + user.getLogin() + "', '" + user.getPassword() +"', '" + user.getRole() + "', " + user.isEnabled() + ");");
+			LOG.info("User saved");
+		} catch (Exception e) {
+            LOG.error("Error: " + e.getMessage());
+		}
 	}
 
 	@Override
 	public void updateUser(UserCassandra user) {
-		// TODO Auto-generated method stub
-		
+		try {
+			session.execute("UPDATE mykeyspace.users SET password = '" + user.getPassword() + "', role = '" + user.getRole() + "', enabled = ", user.isEnabled() + ";");
+			LOG.info("User updated");
+		} catch (Exception e) {
+            LOG.error("Error: " + e.getMessage());
+		}
 	}
 
 	@Override
-	public void deleteUserById(int id) {
-		// TODO Auto-generated method stub
-		
+	public void deleteUserById(String id) {
+		try {
+			session.execute("DELETE FROM mykeyspace.users WHERE id = " + id + ";");
+			LOG.info("User deleted");
+		} catch (Exception e) {
+            LOG.error("Error: " + e.getMessage());
+		}
 	}
 
-
+	@Override
+	public List<UserCassandra> findAllUsers() {
+		mappingManager = new MappingManager(session);
+		Mapper<UserCassandra> mapper = mappingManager.mapper(UserCassandra.class);
+		ResultSet resultSet =  session.execute("SELECT * FROM mykeyspace.users;");
+		
+		Result<UserCassandra> result = mapper.map(resultSet);
+		return result.all();
+	}
 }

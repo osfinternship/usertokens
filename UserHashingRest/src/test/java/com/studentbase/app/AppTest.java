@@ -22,7 +22,7 @@ public class AppTest {
 	//logger
 	final static Logger LOG = Logger.getLogger(AppTest.class);
 
-	static Session session;
+/*	static Session session;
 		
 	@Before
 	public void beforeTest() {
@@ -89,4 +89,4 @@ public class AppTest {
 
 
 	}
-}
+*/}

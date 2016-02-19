@@ -8,7 +8,7 @@ import com.studentbase.app.temp.entity.UserCassandra;
 public interface UserCassandraStrategy extends UserStrategy<UserCassandra>{
 
 	@Override
-	UserCassandra findById(int id);
+	UserCassandra findById(String id);
 
 	@Override
 	UserCassandra findByLogin(String login);
@@ -23,7 +23,7 @@ public interface UserCassandraStrategy extends UserStrategy<UserCassandra>{
 	void updateUser(UserCassandra user);
 
 	@Override
-	void deleteUserById(int id);
+	void deleteUserById(String id);
 
 	@Override
 	List<UserCassandra> findAllUsers();

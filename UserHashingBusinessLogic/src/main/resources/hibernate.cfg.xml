@@ -21,6 +21,7 @@
 
 		<!-- Mapping entities -->
  		<mapping class="com.studentbase.app.entity.User"/>
+ 		<mapping class="com.studentbase.app.temp.entity.UserMySQL"/>
  		
     </session-factory>
 

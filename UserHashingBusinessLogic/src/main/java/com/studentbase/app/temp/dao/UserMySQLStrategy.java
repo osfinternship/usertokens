@@ -8,7 +8,7 @@ import com.studentbase.app.temp.entity.UserMySQL;
 public interface UserMySQLStrategy extends UserStrategy<UserMySQL> {
 
 	@Override
-	UserMySQL findById(int id);
+	UserMySQL findById(String id);
 
 	@Override
 	UserMySQL findByLogin(String login);
@@ -23,7 +23,7 @@ public interface UserMySQLStrategy extends UserStrategy<UserMySQL> {
 	void updateUser(UserMySQL user);
 
 	@Override
-	void deleteUserById(int id);
+	void deleteUserById(String id);
 
 	@Override
 	List<UserMySQL> findAllUsers();
