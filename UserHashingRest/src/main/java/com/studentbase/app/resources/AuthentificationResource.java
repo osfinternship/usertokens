@@ -187,8 +187,9 @@ public class AuthentificationResource {
     		AbstractUser actualUser = (AbstractUser) userStrategy.findById(id);
 	    
     		actualUser.setPassword(md5Apache(user.getPassword()));
-	    
-	    	userStrategy.updateUser(actualUser);
+    		actualUser.setRole(user.getRole());
+
+    		userStrategy.updateUser(actualUser);
 	    
     		return OK;
         } catch (Exception e) {

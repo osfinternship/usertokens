@@ -7,17 +7,10 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Host;
-import com.datastax.driver.core.Metadata;
-import com.studentbase.app.service.UserService;
-import com.studentbase.app.service.Impl.UserServiceImpl;
 import com.studentbase.app.temp.UserStrategy;
 import com.studentbase.app.temp.dao.impl.UserCassandraStrategyImpl;
 import com.studentbase.app.temp.dao.impl.UserMySQLStrategyImpl;
 import com.studentbase.app.temp.entity.AbstractUser;
-import com.studentbase.app.temp.entity.UserMySQL;
-
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AppTest {
@@ -37,7 +30,7 @@ public class AppTest {
 	@Before
 	public void beforeTest() {
 		//session = CassandraClient.getCluster().connect();
-		setUserStrategy(new UserMySQLStrategyImpl());
+		//setUserStrategy(new UserCassandraStrategyImpl());
 		
 //		session = HibernateUtil.getSessionFactory().openSession();
 	}
@@ -69,15 +62,15 @@ public class AppTest {
 	
 /*	@Test
 	public void test1() {
-		AbstractUser user = new AbstractUser();
+*//*		AbstractUser user = new AbstractUser();
 		user.setId(10);
 		user.setLogin("test1");
 		user.setPassword("pass");
 		user.setRole("user");
 		user.setEnabled(true);
 		userStrategy.saveUser(user);
-	}
-	
+*/	//}
+	/*	
 	@Test
 	public void test2() {
 		System.out.println(userStrategy.findAllUsers());

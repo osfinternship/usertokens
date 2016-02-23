@@ -31,7 +31,7 @@ public class Listener implements javax.servlet.ServletContextListener {
 		
 		// Create new cache
 //	    cm = CacheManager.create();  
-		cm = CacheManager.newInstance();
+		//cm = CacheManager.newInstance();
 
 		LOG.debug("Local cache created");
 

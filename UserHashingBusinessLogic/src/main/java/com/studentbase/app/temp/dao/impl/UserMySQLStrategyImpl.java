@@ -27,7 +27,7 @@ public class UserMySQLStrategyImpl implements UserMySQLStrategy {
 	@Override
 	public UserMySQL findByLogin(String login) {
         LOG.info("Get by login: " + login);
-        return (UserMySQL) session.createQuery("from User user where user.login = ?")
+        return (UserMySQL) session.createQuery("from UserMySQL user where user.login = ?")
                 .setParameter(0, login)
                 .uniqueResult();
 	}

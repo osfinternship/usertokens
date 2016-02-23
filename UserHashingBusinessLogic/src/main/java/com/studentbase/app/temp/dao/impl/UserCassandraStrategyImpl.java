@@ -70,7 +70,8 @@ public class UserCassandraStrategyImpl implements UserCassandraStrategy {
 	@Override
 	public void updateUser(UserCassandra user) {
 		try {
-			session.execute("UPDATE mykeyspace.users SET password = '" + user.getPassword() + "', role = '" + user.getRole() + "', enabled = ", user.isEnabled() + ";");
+			session.execute("UPDATE mykeyspace.users SET password = '" + user.getPassword() + "', role = '" + user.getRole() + "', enabled = " + user.isEnabled() + 
+					" WHERE id = " + user.getIid() + ";");
 			LOG.info("User updated");
 		} catch (Exception e) {
             LOG.error("Error: " + e.getMessage());
